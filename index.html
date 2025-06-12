@@ -2,76 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Memory and JOL Task</title>
+  <title>Word-Pair JOL Task (One at a Time)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 40px;
-    }
-    .pair-block {
-      margin-bottom: 30px;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 20px;
+      text-align: center;
     }
     .word-pair {
-      font-size: 1.5em;
-      margin-bottom: 10px;
+      font-size: 2em;
+      margin: 20px 0;
     }
-    .confidence-label {
-      margin-top: 10px;
+    .slider-label {
+      margin-top: 20px;
+    }
+    #submit-btn {
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
 
   <h2>Memory and Judgment of Learning Task</h2>
-  <p>For each word pair below, rate how likely you are to remember the target word in a future memory test.</p>
+  <p id="instruction">You will see one word pair at a time. Rate how likely you are to remember the second word in a future test.</p>
 
-  <form id="jol-form">
-    <div class="pair-block">
-      <div class="word-pair">apple – book</div>
-      <label class="confidence-label">Confidence (0–100): 
-        <input type="range" name="jol1" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value">
-        <output>50</output>
-      </label>
+  <div id="task">
+    <div class="word-pair" id="word-pair"></div>
+    <div class="slider-label">
+      Confidence (0–100):
+      <input type="range" id="confidence-slider" min="0" max="100" value="50" oninput="document.getElementById('conf-value').textContent = this.value">
+      <span id="conf-value">50</span>
     </div>
-    <div class="pair-block">
-      <div class="word-pair">cloud – door</div>
-      <label class="confidence-label">Confidence (0–100): 
-        <input type="range" name="jol2" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value">
-        <output>50</output>
-      </label>
-    </div>
-    <div class="pair-block">
-      <div class="word-pair">fish – eagle</div>
-      <label class="confidence-label">Confidence (0–100): 
-        <input type="range" name="jol3" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value">
-        <output>50</output>
-      </label>
-    </div>
-    <div class="pair-block">
-      <div class="word-pair">hat – moon</div>
-      <label class="confidence-label">Confidence (0–100): 
-        <input type="range" name="jol4" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value">
-        <output>50</output>
-      </label>
-    </div>
-    <div class="pair-block">
-      <div class="word-pair">lamp – rain</div>
-      <label class="confidence-label">Confidence (0–100): 
-        <input type="range" name="jol5" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value">
-        <output>50</output>
-      </label>
-    </div>
+    <button id="submit-btn" onclick="submitTrial()">Submit</button>
+  </div>
 
-    <button type="button" onclick="submitJOLs()">Submit</button>
-  </form>
-
-  <div id="results" style="margin-top:40px;"></div>
+  <div id="result" style="display:none; margin-top:40px;"></div>
 
   <script>
-    function submitJOLs() {
-      const form = document.getElementById('jol-form');
-      const formData = new FormData(form);
-      const output = document.getElementById('results');
-      output.innerHTML = "<h3>Your Ratings:</h3><ul>
+    const wordPairs = [
+      ["apple", "book"],
+      ["cloud", "door"],
+      ["fish", "eagle"],
+      ["hat", "moon"],
+      ["lamp", "rain"]
+    ];
+
+    let currentTrial = 0;
+    const responses = [];
+
+    function showTrial(index) {
+      const pair = wordPairs[index];
+      document.getElementById("word-pair").textContent = `${pair[0]} – ${pair[1]}`;
+      document.getElementById("confidence-slider").value = 50;
+      document.getElementById("conf-value").textContent = "50";
+    }
+
+    function submitTrial() {
+      const sliderVal = document.getElementById("confidence-slider").value;
+      const pair = wordPairs[currentTrial];
+      responses.push({
+        cue: pair[0],
+        target: pair[1],
+        confidence: sliderVal
+      });
+
+      currentTrial++;
+
+      if (currentTrial < wordPairs.length) {
+        showTrial(currentTrial);
+      } else {
+        endTask();
+      }
+    }
+
+    function endTask() {
+      document.getElementById("task").style.display = "none";
+      let html = "<h3>Your Ratings:</h3><ul>";
+      responses.forEach((resp, i) => {
+        html += `<li>Trial ${i + 1}: ${resp.cue} – ${resp.target}, Confidence = ${resp.confidence}</li>`;
+      });
+      html += "</ul>";
+      document.getElementById("result").innerHTML = html;
+      document.getElementById("result").style.display = "block";
+    }
+
+    // Start with the first trial
+    showTrial(currentTrial);
+  </script>
+
+</body>
+</html>
