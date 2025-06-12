@@ -3,11 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Word-Pair Memory and JOL Task</title>
+
+  <!-- JSPSYCH CORE & PLUGINS -->
   <script src="https://unpkg.com/jspsych@7.3.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-slider-response"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-html-form"></script>
+
+  <!-- CSS -->
   <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet">
+
   <style>
     body {
       background-color: #fff;
@@ -21,80 +26,80 @@
 </head>
 <body>
   <div id="jspsych-target"></div>
-</body>
 
-<script>
-window.addEventListener("DOMContentLoaded", function () {
-  const jsPsych = initJsPsych({
-    on_finish: function () {
-      jsPsych.data.displayData(); // You can replace this with a call to save to Google Sheets
-    },
-    display_element: 'jspsych-target'
-  });
-
-  function generateWordPairs(n) {
-    const words = ["apple", "book", "cloud", "door", "eagle", "fish", "goat", "hat", "ice", "jam", "kite", "lamp", "moon", "nest", "owl", "pen", "queen", "rain", "sun", "tree", "umbrella", "vase", "whale", "xray", "yarn", "zebra"];
-    let pairs = [];
-    for (let i = 0; i < n; i++) {
-      let cue = words[Math.floor(Math.random() * words.length)];
-      let target = words[Math.floor(Math.random() * words.length)];
-      pairs.push({ cue: cue, target: target });
-    }
-    return pairs;
-  }
-
-  let lists = [generateWordPairs(36), generateWordPairs(36), generateWordPairs(36), generateWordPairs(36)];
-  let conditions = jsPsych.randomization.shuffle(["FA", "DA", "FA", "DA"]);
-  let timeline = [];
-
-  timeline.push({
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `<p>Welcome! You will study word-pairs and make Judgments of Learning (JOLs) for each.</p>
-               <p>In some blocks, you will also do a secondary tone-detection task (simulated for now).</p>
-               <p>Use your mouse to give a JOL on a scale from 0 to 100.</p>`,
-    choices: ["Start"]
-  });
-
-  lists.forEach((list, index) => {
-    const condition = conditions[index];
-    let study_trials = [];
-
-    jsPsych.randomization.shuffle(list).forEach(pair => {
-      study_trials.push({
-        type: jsPsychHtmlSliderResponse,
-        stimulus: `
-          <div class="instruction-text">How likely are you to remember this pair?</div>
-          <div class="word-pair-text">${pair.cue} - ${pair.target}</div>
-        `,
-        labels: ["0", "100"],
-        slider_start: 50,
-        require_movement: true,
-        data: { cue: pair.cue, target: pair.target, condition: condition, phase: "study" }
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      const jsPsych = initJsPsych({
+        on_finish: function () {
+          jsPsych.data.displayData(); // You can replace this with data upload later
+        },
+        display_element: 'jspsych-target'
       });
+
+      function generateWordPairs(n) {
+        const words = ["apple", "book", "cloud", "door", "eagle", "fish", "goat", "hat", "ice", "jam", "kite", "lamp", "moon", "nest", "owl", "pen", "queen", "rain", "sun", "tree", "umbrella", "vase", "whale", "xray", "yarn", "zebra"];
+        let pairs = [];
+        for (let i = 0; i < n; i++) {
+          let cue = words[Math.floor(Math.random() * words.length)];
+          let target = words[Math.floor(Math.random() * words.length)];
+          pairs.push({ cue: cue, target: target });
+        }
+        return pairs;
+      }
+
+      let lists = [generateWordPairs(36), generateWordPairs(36), generateWordPairs(36), generateWordPairs(36)];
+      let conditions = jsPsych.randomization.shuffle(["FA", "DA", "FA", "DA"]);
+      let timeline = [];
+
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `<p>Welcome! You will study word-pairs and make Judgments of Learning (JOLs) for each.</p>
+                   <p>In some blocks, you will also do a secondary tone-detection task (simulated for now).</p>
+                   <p>Use your mouse to give a JOL on a scale from 0 to 100.</p>`,
+        choices: ["Start"]
+      });
+
+      lists.forEach((list, index) => {
+        const condition = conditions[index];
+        let study_trials = [];
+
+        jsPsych.randomization.shuffle(list).forEach(pair => {
+          study_trials.push({
+            type: jsPsychHtmlSliderResponse,
+            stimulus: `
+              <div class="instruction-text">How likely are you to remember this pair?</div>
+              <div class="word-pair-text">${pair.cue} - ${pair.target}</div>
+            `,
+            labels: ["0", "100"],
+            slider_start: 50,
+            require_movement: true,
+            data: { cue: pair.cue, target: pair.target, condition: condition, phase: "study" }
+          });
+        });
+
+        timeline.push(...study_trials);
+
+        let recall_trials = jsPsych.randomization.shuffle(list).map(pair => {
+          return {
+            type: jsPsychSurveyHtmlForm,
+            preamble: `<p><strong>Cue: ${pair.cue}</strong></p>`,
+            html: '<p><label>Target: <input name="target" type="text"/></label></p>',
+            data: { cue: pair.cue, correct: pair.target, condition: condition, phase: "recall" }
+          };
+        });
+
+        timeline.push({
+          type: jsPsychHtmlButtonResponse,
+          stimulus: `<p><strong>What's the corresponding target?</strong></p>
+                     <p>Type a response and then press enter.</p>`,
+          choices: ["Begin Test"]
+        });
+
+        timeline.push(...recall_trials);
+      });
+
+      jsPsych.run(timeline);
     });
-
-    timeline.push(...study_trials);
-
-    let recall_trials = jsPsych.randomization.shuffle(list).map(pair => {
-      return {
-        type: jsPsychSurveyHtmlForm,
-        preamble: `<p><strong>Cue: ${pair.cue}</strong></p>`,
-        html: '<p><label>Target: <input name="target" type="text"/></label></p>',
-        data: { cue: pair.cue, correct: pair.target, condition: condition, phase: "recall" }
-      };
-    });
-
-    timeline.push({
-      type: jsPsychHtmlButtonResponse,
-      stimulus: `<p><strong>What's the corresponding target?</strong></p>
-                 <p>Type a response and then press enter.</p>`,
-      choices: ["Begin Test"]
-    });
-
-    timeline.push(...recall_trials);
-  });
-
-  jsPsych.run(timeline);
-});
-</script>
+  </script>
+</body>
 </html>
