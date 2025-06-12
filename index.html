@@ -5,10 +5,10 @@
   <title>Word-Pair Memory and JOL Task</title>
 
   <!-- JSPSYCH CORE & PLUGINS -->
-  <script src="https://unpkg.com/jspsych@7.3.0"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-slider-response"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-button-response"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form"></script>
+  <script src="https://unpkg.com/jspsych@7.3.0/dist/jspsych.js"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-slider-response@1.1.1"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.1"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@1.1.1"></script>
 
   <!-- CSS -->
   <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet">
@@ -31,7 +31,7 @@
     window.addEventListener("DOMContentLoaded", function () {
       const jsPsych = initJsPsych({
         on_finish: function () {
-          jsPsych.data.displayData(); // You can replace this with data upload later
+          jsPsych.data.displayData();
         },
         display_element: 'jspsych-target'
       });
