@@ -23,10 +23,16 @@
 </head>
 <body>
 
-  <h2>Memory and Judgment of Learning Task</h2>
-  <p id="instruction">You will see one word pair at a time. Rate how likely you are to remember the second word in a future test.</p>
+  <div id="subject-entry">
+    <h2>Enter Participant ID</h2>
+    <input type="text" id="subject-id" placeholder="e.g., P001">
+    <button onclick="startTask()">Start</button>
+  </div>
 
-  <div id="task">
+  <div id="task" style="display:none;">
+    <h2>Memory and Judgment of Learning Task</h2>
+    <p id="instruction">You will see one word pair at a time. Rate how likely you are to remember the second word in a future test.</p>
+
     <div class="word-pair" id="word-pair"></div>
     <div class="slider-label">
       Confidence (0–100):
@@ -48,7 +54,19 @@
     ];
 
     let currentTrial = 0;
-    const responses = [];
+    let responses = [];
+    let subjectID = "";
+
+    function startTask() {
+      subjectID = document.getElementById("subject-id").value.trim();
+      if (!subjectID) {
+        alert("Please enter a participant ID.");
+        return;
+      }
+      document.getElementById("subject-entry").style.display = "none";
+      document.getElementById("task").style.display = "block";
+      showTrial(currentTrial);
+    }
 
     function showTrial(index) {
       const pair = wordPairs[index];
@@ -84,10 +102,19 @@
       html += "</ul>";
       document.getElementById("result").innerHTML = html;
       document.getElementById("result").style.display = "block";
-    }
 
-    // Start with the first trial
-    showTrial(currentTrial);
+      // Send to Google Sheets
+      fetch("https://script.google.com/macros/s/AKfycbwG5PmfRmNGWqC2f3doYpM-J5cZN_PL9Qhyw-lSllZc1Rvmh421ywE93vQE5Gy4yw6l/exec", {
+        method: "POST",
+        body: JSON.stringify({ subject: subjectID, trials: responses }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => res.text())
+      .then(response => console.log("Submitted: " + response))
+      .catch(err => console.error("Submission error:", err));
+    }
   </script>
 
 </body>
