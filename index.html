@@ -74,12 +74,4 @@
       const form = document.getElementById('jol-form');
       const formData = new FormData(form);
       const output = document.getElementById('results');
-      output.innerHTML = "<h3>Your Ratings:</h3><ul>";
-      for (const [key, value] of formData.entries()) {
-        output.innerHTML += `<li>${key}: ${value}</li>`;
-      }
-      output.innerHTML += "</ul>";
-    }
-  </script>
-</body>
-</html>
+      output.innerHTML = "<h3>Your Ratings:</h3><ul>
