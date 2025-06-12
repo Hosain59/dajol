@@ -2,104 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Word-Pair Memory and JOL Task</title>
-
-  <!-- JSPSYCH CORE & PLUGINS -->
-  <script src="https://unpkg.com/jspsych@7.3.0/dist/jspsych.js"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-slider-response@1.1.1"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.1"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@1.1.1"></script>
-
-  <!-- CSS -->
-  <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet">
-
+  <title>Memory and JOL Task</title>
   <style>
     body {
-      background-color: #fff;
-      padding: 20px;
       font-family: Arial, sans-serif;
+      margin: 40px;
     }
-    .jol-slider { width: 80%; margin: 2em auto; }
-    .instruction-text { font-size: 0.9em; text-align: center; margin-bottom: 1em; }
-    .word-pair-text { font-size: 2em; text-align: center; margin: 2em 0; }
+    .pair-block {
+      margin-bottom: 30px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 20px;
+    }
+    .word-pair {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+    .confidence-label {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <div id="jspsych-target"></div>
+
+  <h2>Memory and Judgment of Learning Task</h2>
+  <p>For each word pair below, rate how likely you are to remember the target word in a future memory test.</p>
+
+  <form id="jol-form">
+    <div class="pair-block">
+      <div class="word-pair">apple – book</div>
+      <label class="confidence-label">Confidence (0–100): 
+        <input type="range" name="jol1" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value">
+        <output>50</output>
+      </label>
+    </div>
+    <div class="pair-block">
+      <div class="word-pair">cloud – door</div>
+      <label class="confidence-label">Confidence (0–100): 
+        <input type="range" name="jol2" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value">
+        <output>50</output>
+      </label>
+    </div>
+    <div class="pair-block">
+      <div class="word-pair">fish – eagle</div>
+      <label class="confidence-label">Confidence (0–100): 
+        <input type="range" name="jol3" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value">
+        <output>50</output>
+      </label>
+    </div>
+    <div class="pair-block">
+      <div class="word-pair">hat – moon</div>
+      <label class="confidence-label">Confidence (0–100): 
+        <input type="range" name="jol4" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value">
+        <output>50</output>
+      </label>
+    </div>
+    <div class="pair-block">
+      <div class="word-pair">lamp – rain</div>
+      <label class="confidence-label">Confidence (0–100): 
+        <input type="range" name="jol5" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value">
+        <output>50</output>
+      </label>
+    </div>
+
+    <button type="button" onclick="submitJOLs()">Submit</button>
+  </form>
+
+  <div id="results" style="margin-top:40px;"></div>
 
   <script>
-    window.addEventListener("DOMContentLoaded", function () {
-      const jsPsych = initJsPsych({
-        on_finish: function () {
-          jsPsych.data.displayData();
-        },
-        display_element: 'jspsych-target'
-      });
-
-      function generateWordPairs(n) {
-        const words = ["apple", "book", "cloud", "door", "eagle", "fish", "goat", "hat", "ice", "jam", "kite", "lamp", "moon", "nest", "owl", "pen", "queen", "rain", "sun", "tree", "umbrella", "vase", "whale", "xray", "yarn", "zebra"];
-        let pairs = [];
-        for (let i = 0; i < n; i++) {
-          let cue = words[Math.floor(Math.random() * words.length)];
-          let target = words[Math.floor(Math.random() * words.length)];
-          pairs.push({ cue: cue, target: target });
-        }
-        return pairs;
+    function submitJOLs() {
+      const form = document.getElementById('jol-form');
+      const formData = new FormData(form);
+      const output = document.getElementById('results');
+      output.innerHTML = "<h3>Your Ratings:</h3><ul>";
+      for (const [key, value] of formData.entries()) {
+        output.innerHTML += `<li>${key}: ${value}</li>`;
       }
-
-      let lists = [generateWordPairs(36), generateWordPairs(36), generateWordPairs(36), generateWordPairs(36)];
-      let conditions = jsPsych.randomization.shuffle(["FA", "DA", "FA", "DA"]);
-      let timeline = [];
-
-      timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: `<p>Welcome! You will study word-pairs and make Judgments of Learning (JOLs) for each.</p>
-                   <p>In some blocks, you will also do a secondary tone-detection task (simulated for now).</p>
-                   <p>Use your mouse to give a JOL on a scale from 0 to 100.</p>`,
-        choices: ["Start"]
-      });
-
-      lists.forEach((list, index) => {
-        const condition = conditions[index];
-        let study_trials = [];
-
-        jsPsych.randomization.shuffle(list).forEach(pair => {
-          study_trials.push({
-            type: jsPsychHtmlSliderResponse,
-            stimulus: `
-              <div class="instruction-text">How likely are you to remember this pair?</div>
-              <div class="word-pair-text">${pair.cue} - ${pair.target}</div>
-            `,
-            labels: ["0", "100"],
-            slider_start: 50,
-            require_movement: true,
-            data: { cue: pair.cue, target: pair.target, condition: condition, phase: "study" }
-          });
-        });
-
-        timeline.push(...study_trials);
-
-        let recall_trials = jsPsych.randomization.shuffle(list).map(pair => {
-          return {
-            type: jsPsychSurveyHtmlForm,
-            preamble: `<p><strong>Cue: ${pair.cue}</strong></p>`,
-            html: '<p><label>Target: <input name="target" type="text"/></label></p>',
-            data: { cue: pair.cue, correct: pair.target, condition: condition, phase: "recall" }
-          };
-        });
-
-        timeline.push({
-          type: jsPsychHtmlButtonResponse,
-          stimulus: `<p><strong>What's the corresponding target?</strong></p>
-                     <p>Type a response and then press enter.</p>`,
-          choices: ["Begin Test"]
-        });
-
-        timeline.push(...recall_trials);
-      });
-
-      jsPsych.run(timeline);
-    });
+      output.innerHTML += "</ul>";
+    }
   </script>
 </body>
 </html>
